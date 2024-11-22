@@ -1,0 +1,97 @@
+####gcloud projects - utilitario de gerenciamento de projetos####
+gcloud projects 
+
+#listar projetos da conta
+gcloud projects list  
+
+#criar um novo projeto para a conta
+gcloud projects create 
+
+#delete um projeto e seus itens, para a conta
+gcloud projects delete
+
+#exemplo ciração projeto
+gcloud projects create proj-data-07032024 --name="Projeto de extracao de dados" 
+
+
+
+####gsutil - utilitario de linha de comando para storage - buckets####
+
+#listar bucket do projeto
+gsutil ls
+
+#remover bucket do projeto
+gsutil rb
+
+#criar bucket do projeto
+gsutil mb
+
+Opções mais importantes : 
+
+-c: Classe de armazenamento: 
+
+
+Standard
+Best for short-term storage and frequently accessed data
+
+Nearline
+Best for backups and data accessed less than once a month
+
+Coldline
+Best for disaster recovery and data accessed less than once a quarter
+
+Archive
+Best for long-term digital preservation of data accessed less than once a year
+
+
+-l: Localização do bucket - Padrão us
+
+
+-p: o padrão é o projeto configurado 
+
+#exemplo criaçao bucket google cloud storage
+gsutil mb -l us-east1 -c standard gs://meu_bucket_001_facens
+
+
+Interação com arquivos em buckets
+
+#copiar arquivo para o bucket
+gsutil cp
+
+#mover arquivo para o bucket
+gsutil mv
+
+#remover arquivos do bucket
+gsutil rm
+
+#listando conteudo dentro do bucket
+gsutil ls gs://storage_bigdata_001
+
+
+#copiar pasta da sua maquina local para o gcp
+gsutil cp -r transient gs://storage_bigdata_001
+
+
+####gcloud dataproc - utilitario de linha de comando para dataproc ####
+
+#criando cluster
+
+gcloud dataproc clusters create dataproc-bigdata-cluster \
+--enable-component-gateway --bucket storage_dataproc-bigdata-cluster \
+--region us-east1 --zone us-east1-b --master-machine-type n2-standard-2 \
+--master-boot-disk-type pd-balanced --master-boot-disk-size 32 \
+--num-master-local-ssds 1 --num-workers 2 --worker-machine-type n2-standard-2 \
+--worker-boot-disk-type pd-balanced --worker-boot-disk-size 32 \
+--num-worker-local-ssds 1 --image-version 2.1-debian11 \
+--optional-components JUPYTER --project tough-victor-415420
+
+
+#Executar job dataproc linha de comando utilizando Spark Submit
+ 
+gcloud dataproc jobs submit pyspark \
+--project tough-victor-415420 --region us-east1 \
+--cluster dataproc-bigdata-cluster \
+--jars gs://storage_bigdata_001/jars/delta-core_2.12-2.3.0.jar,gs://storage_bigdata_001/jars/delta-storage-2.3.0.jar \
+gs://storage_bigdata_001/spark-scripts/ingestion_countries.py \
+-- --bucket_transient='gs://datalake_bigdata_facens_001/transient/departments/countries/countries.csv' \
+--bucket_bronze='gs://datalake_bigdata_facens_001/bronze/departments/countries'
